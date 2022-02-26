@@ -16,6 +16,10 @@ service PrinterInfo{
 	rpc FileHandler(stream FileReq) returns (FileResp);
 }
 
+service NetworkConnecter {
+	rpc GetWinAdd(AddressReq) returns (AddressResp);
+}
+
 
 // Self-defined message
 message Error {
@@ -59,5 +63,19 @@ message FileResp{
 	oneof result{
 		Error error = 1;
 		Success Success = 2;
+	}
+}
+
+message AddressReq {
+	string originLinuxName = 1;
+	string deviceId = 2;
+	int32 networkType = 3;
+}
+
+message AddressResp {
+	string ipv4Add = 1;
+	oneof result{
+		Error error = 2;
+		Success Success = 3;
 	}
 }

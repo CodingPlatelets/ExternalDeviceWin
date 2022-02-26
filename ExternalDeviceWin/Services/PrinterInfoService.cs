@@ -45,7 +45,7 @@ namespace ExternalDeviceWin.Services
                 var c = requestStream.Current;
                 _logger.LogInformation("{} send a file to print", c.OriginLinuxName);
                 using var ms = new MemoryStream(c.Files.ToByteArray());
-                //todo: print the file
+                //TODO: print the file
             }
             return new FileResp
             {
