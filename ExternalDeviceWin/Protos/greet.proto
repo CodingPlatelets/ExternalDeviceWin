@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option csharp_namespace = "ExternalDeviceWin";
+
+package greet;
+
+// The greeting service definition.
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply);
+}
+
+service PrinterInfo{
+	// To check if the usb-ip is connected or the printer is drivered.
+	rpc GetAvailablePrinters(PrinterInfoRequest) returns (PrinterInfoResponse);
+	rpc FileHandler(stream FileReq) returns (FileResp);
+}
+
+
+// Self-defined message
+message Error {
+	int32 code =1;
+	string message = 2;
+}
+
+message Success {
+	int32 code = 1;
+	string message = 2;
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings.
+message HelloReply {
+  string message = 1;
+}
+
+message PrinterInfoRequest{
+	string originLinuxName = 1;
+	string originPrinterName = 2;
+}
+
+//The Reponse will 
+message PrinterInfoResponse {
+	string winName =1;
+	bool isPrinterExisted = 2;
+	repeated string availablePrinter = 3;
+}
+
+message FileReq{
+	string originLinuxName = 1;
+	bytes files = 2;
+}
+
+message FileResp{
+	oneof result{
+		Error error = 1;
+		Success Success = 2;
+	}
+}
