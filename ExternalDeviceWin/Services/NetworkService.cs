@@ -1,7 +1,10 @@
-﻿using Grpc.Core;
+﻿using ExternalDeviceWin.Utils;
+using Grpc.Core;
+using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 
 namespace ExternalDeviceWin.Services
 {
@@ -9,7 +12,7 @@ namespace ExternalDeviceWin.Services
     {
         private static string GetLocalIPv4(NetworkInterfaceType _type)
         {
-            string output = String.Empty;
+            var output = string.Empty;
             foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
@@ -28,11 +31,11 @@ namespace ExternalDeviceWin.Services
 
         public override Task<AddressResp> GetWinAdd(AddressReq request, ServerCallContext context)
         {
-            if(!Enum.IsDefined(typeof(NetworkInterfaceType), request.NetworkType))
+            if (!Enum.IsDefined(typeof(NetworkInterfaceType), request.NetworkType))
             {
                 return Task.FromResult(new AddressResp
                 {
-                    Ipv4Add = String.Empty,
+                    Ipv4Add = string.Empty,
                     Error = new Error
                     {
                         Code = (int)HttpStatusCode.BadRequest,
@@ -50,6 +53,30 @@ namespace ExternalDeviceWin.Services
                     Message = "OK",
                 }
             });
+        }
+
+        public override Task<UsbipCallResp> InitUsbIp(UsbipCallReq request, ServerCallContext context)
+        {
+            var client = new UsbipClient();
+            var msg = client.InitUsbConnect(request.BusID, request.OriginIpAddress,context);
+            var rep = new UsbipCallResp();
+            if (msg.Item2)
+            {
+                rep.Success = new Success
+                {
+                    Code = (int)HttpStatusCode.OK,
+                    Message = msg.Item1,
+                };
+            }
+            else
+            {
+                rep.Error = new Error
+                {
+                    Code = (int)HttpStatusCode.BadRequest,
+                    Message = msg.Item1,
+                };
+            }
+            return Task.FromResult<UsbipCallResp>(rep);
         }
     }
 }

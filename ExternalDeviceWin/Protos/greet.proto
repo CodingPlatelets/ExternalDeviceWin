@@ -18,6 +18,8 @@ service PrinterInfo{
 
 service NetworkConnecter {
 	rpc GetWinAdd(AddressReq) returns (AddressResp);
+	// init the usbip connect
+	rpc InitUsbIp(UsbipCallReq) returns (UsbipCallResp);
 }
 
 
@@ -77,5 +79,19 @@ message AddressResp {
 	oneof result{
 		Error error = 2;
 		Success Success = 3;
+	}
+}
+
+message UsbipCallReq{
+	string originLinuxName = 1;
+	string originIpAddress = 2;
+	string busID = 3;
+	bool isLocal = 4;
+}
+
+message UsbipCallResp {
+	oneof result{
+		Error error = 1;
+		Success success = 2;
 	}
 }

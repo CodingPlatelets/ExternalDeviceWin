@@ -36,5 +36,11 @@ namespace ExternalDeviceWin.Utils
             //todo: get printer info
             return "OK";
         }
+
+        private bool ExecutePdf(Stream ms, string printerName, bool isColored,
+            int fileCout, int beginPage = 0, int endPage = 0, string pageSize = "A4")
+        {
+            return true;
+        }
     }
 }
