@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using System.Diagnostics;
+using System.Text;
 
 namespace ExternalDeviceWin.Utils
 {
@@ -25,30 +26,43 @@ namespace ExternalDeviceWin.Utils
 
         public Tuple<string,bool> InitUsbConnect(string busId, string serverIPAddress, ServerCallContext ctx)
         {
-            var msg = string.Empty;
-            Directory.SetCurrentDirectory(workingDir);
-            if (!checkExcuteFile())
+            var msg = $"{busId} is Connected";
+            var errMsg = new StringBuilder();
+            try
             {
-                _logger.LogError("without usbip exe");
-                return new Tuple<string,bool>(msg,false);
+                Directory.SetCurrentDirectory(workingDir);
+                if (!checkExcuteFile())
+                {
+                    _logger.LogError("without usbip exe");
+                    return new Tuple<string, bool>(msg, false);
+                }
+                using var p = new Process();
+                var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
+                startInfo.UseShellExecute = false;              //不显示shell
+                startInfo.CreateNoWindow = true;                //不创建窗口
+                startInfo.RedirectStandardError = true;         //打开错误流
+                p.StartInfo = startInfo;
+
+                p.ErrorDataReceived += (sender, c) =>
+                {
+                    Console.WriteLine("error");
+                    Console.WriteLine(c.Data);
+                    errMsg.Append(c.Data);
+                };
+
+                p.Start();
+
+                p.BeginErrorReadLine();
+                //p.BeginOutputReadLine();
+
+                p.WaitForExit(1000);
+                p.Close();
             }
-            using var p = new Process();
-            var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
-            //startInfo.UseShellExecute = false;          //不显示shell
-            //startInfo.CreateNoWindow = true;            //不创建窗口
-            startInfo.RedirectStandardOutput = true;    //打开流输出
-            startInfo.RedirectStandardError = true;     //打开错误流
-            p.StartInfo = startInfo;
-
-            p.Start();
-
-            var errMsg = p.StandardError.ReadToEnd();
-            msg = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-
-            p.Close();
-            Directory.SetCurrentDirectory("..");
-            return string.IsNullOrEmpty(errMsg) ? new Tuple<string,bool>(msg,true) : new Tuple<string,bool>(errMsg,false);
+            finally
+            {
+                Directory.SetCurrentDirectory("..");
+            }
+            return string.IsNullOrEmpty(errMsg.ToString()) ? new Tuple<string,bool>(msg,true) : new Tuple<string,bool>(errMsg.ToString(),false);
         }
 
         private bool checkExcuteFile() => File.Exists("usbip.exe") && File.Exists("attacher.exe");
