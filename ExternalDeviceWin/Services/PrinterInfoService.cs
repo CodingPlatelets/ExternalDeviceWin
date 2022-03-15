@@ -39,11 +39,69 @@ namespace ExternalDeviceWin.Services
             {
                 Success = new Success
                 {
-                     Code = (int)HttpStatusCode.OK,
+                    Code = (int)HttpStatusCode.OK,
                     Message = "file upload is succeeded",
                 }
             };
         }
-        
+
+        public override Task<PrintQueueRep> GetPrintQueueInfo(PrintQueueReq request, ServerCallContext context)
+        {
+            var resp = new PrintQueueRep();
+            if (string.IsNullOrEmpty(request.PrintQueueName))
+            {
+                resp.PrintQueueInfoList.PrintQueueList.AddRange(from p in PrinterUtil.GetSlefPrintQueuesInfo()
+                                                                select new printQueueInfo
+                                                                {
+                                                                    Name = p.Name,
+                                                                    FullName = p.FullName,
+                                                                    IsAvailable = p.IsAvailable,
+                                                                    IsBusy = p.IsBusy,
+                                                                    IsInError = p.IsInError,
+                                                                    IsOffLine = p.IsOffLine,
+                                                                    IsOutOfPaper = p.IsOutOfPapaer,
+                                                                    IsPaperJammed = p.IsPaperJammed,
+                                                                    IsPaused = p.IsPaused,
+                                                                    ErrMsg = p.ErrMsg,
+                                                                });
+            }
+            else
+            {
+                var p = PrinterUtil.GetSlefPrintQueueInfo(request.PrintQueueName);
+                if(p is null)
+                {
+                    resp.PrintQueueInfo = new printQueueInfo
+                    {
+                        Name = default(string),
+                        FullName = default(string),
+                        IsAvailable = default(bool),
+                        IsBusy = default(bool),
+                        IsInError = default(bool),
+                        IsOffLine = default(bool),
+                        IsOutOfPaper = default(bool),
+                        IsPaperJammed = default(bool),
+                        IsPaused = default(bool),
+                    };
+                }
+                else
+                {
+                    resp.PrintQueueInfo = new printQueueInfo
+                    {
+                        Name = p.Name,
+                        FullName = p.FullName,
+                        IsAvailable = p.IsAvailable,
+                        IsBusy = p.IsBusy,
+                        IsInError = p.IsInError,
+                        IsOffLine = p.IsOffLine,
+                        IsOutOfPaper = p.IsOutOfPapaer,
+                        IsPaperJammed = p.IsPaperJammed,
+                        IsPaused = p.IsPaused,
+                        ErrMsg = p.ErrMsg,
+                    } ?? throw new NullReferenceException();
+                }
+            }
+
+            return Task.FromResult(resp) ;
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace ExternalDeviceWin.Utils
 
         static PrinterUtil()
         {
-            _server = new PrintServer();
+            _server = new LocalPrintServer();
             _logger = LogUtils.CreateLogger(nameof(PrinterUtil));
         }
 
@@ -28,9 +28,10 @@ namespace ExternalDeviceWin.Utils
         /// <returns></returns>
         public static IEnumerable<string> GetPrinterList()
         {
-            _logger.LogDebug("get printer list");
             // Todo: write to config file
-            return from p in _server.GetPrintQueues()
+            _logger.LogDebug(Thread.CurrentThread.ToString());
+            using var myServer = new PrintServer();
+            return from p in myServer.GetPrintQueues()
                    where !string.IsNullOrWhiteSpace(p.Name)
                    where !p.Name.Contains("OneNote (Desktop)")
                    where !p.Name.Contains("Microsoft Print to PDF")
@@ -38,25 +39,15 @@ namespace ExternalDeviceWin.Utils
                    where !p.Name.Contains("Adobe PDF")
                    where !p.Name.Contains("Microsoft XPS Document Writer")
                    select p.Name;
-        }
 
-        public static string GetPrinterInfo(string printerName)
-        {
-            var ll = GetPrinterList().ToList<string>();
-            if (!GetPrinterList().ToList().Contains(printerName))
-            {
-                return string.Empty;
-            }
-            using var printQueues = _server.GetPrintQueues();
-            var l = from p in printQueues where ll.Contains(p.Name) select p;
-            Console.WriteLine(from lll in l select new { lll.Name, lll.FullName, lll.Description, lll.DefaultPrintTicket, lll.QueuePort, lll.UserPrintTicket });
-            return "OK";
+
         }
 
         public static IEnumerable<PrintQueueInfo> GetSlefPrintQueuesInfo()
         {
             var printerList = GetPrinterList().ToList<string>();
-            using var pd = _server.GetPrintQueues();
+            using var myServer = new PrintServer();
+            using var pd = myServer.GetPrintQueues();
             return from p in pd
                    where printerList.Contains(p.Name)
                    select new PrintQueueInfo
@@ -72,17 +63,27 @@ namespace ExternalDeviceWin.Utils
                        IsPaused = p.IsPaused,
                        ErrMsg = PrinterErrMsg(p),
                    };
+
         }
 
         public static PrintQueueInfo? GetSlefPrintQueueInfo(string printQueueName)
         {
-            using var pd = _server.GetPrintQueues();
-            var l = GetSlefPrintQueuesInfo();
-            if(!l.Any())
+
+            using var p = new PrintServer().GetPrintQueue(printQueueName) ?? throw new NullReferenceException();
+
+            return new PrintQueueInfo
             {
-                return default(PrintQueueInfo);
-            }
-            return l.FirstOrDefault(p => printQueueName == p.Name);
+                Name = p.Name,
+                FullName = p.FullName,
+                IsAvailable = p.IsNotAvailable,
+                IsBusy = p.IsBusy,
+                IsInError = p.IsInError,
+                IsOffLine = p.IsOffline,
+                IsOutOfPapaer = p.IsOutOfPaper,
+                IsPaperJammed = p.IsPaperJammed,
+                IsPaused = p.IsPaused,
+                ErrMsg = PrinterErrMsg(p),
+            };
         }
 
         private static string PrinterErrMsg(PrintQueue pq)

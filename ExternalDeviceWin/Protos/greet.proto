@@ -11,8 +11,9 @@ service Greeter {
 }
 
 service PrinterInfo{
-	// To check if the usb-ip is connected or the printer is drivered.
+	// To check if the usb-ip is connected or the printer is driven.
 	rpc GetAvailablePrinter(PrinterInfoRequest) returns (PrinterInfoResponse);
+	// need to install driver, cannot be used now!!
 	rpc GetPrintQueueInfo(PrintQueueReq) returns (PrintQueueRep);
 	rpc FileHandler(stream FileReq) returns (FileResp);
 }
@@ -38,7 +39,7 @@ message Success {
 message printQueueInfo {
 	string Name = 1;
 	string FullName = 2;
-	string IsAvailable = 3;
+	bool IsAvailable = 3;
 	bool IsBusy = 4;
 	bool IsInError = 5;
 	bool IsOffLine = 6;
@@ -47,6 +48,11 @@ message printQueueInfo {
 	bool IsPaused = 9;
 	string ErrMsg = 10;
 }
+
+message printQueueInfoList {
+	repeated printQueueInfo PrintQueueList = 1;
+}
+
 
 // The request message containing the user's name.
 message HelloRequest {
@@ -70,14 +76,14 @@ message PrinterInfoResponse {
 }
 
 message PrintQueueReq {
-	strng originLinuxName = 1;
+	string originLinuxName = 1;
 	// is an optional param
 	string printQueueName = 2;
 }
 
 message PrintQueueRep {
 	oneof result{
-		repeated printQueueInfo PrintQueueInfoList = 1;
+		printQueueInfoList PrintQueueInfoList = 1;
 		printQueueInfo PrintQueueInfo = 2;
 	}
 }
