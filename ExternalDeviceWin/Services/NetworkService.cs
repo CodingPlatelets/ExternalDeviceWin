@@ -10,6 +10,13 @@ namespace ExternalDeviceWin.Services
 {
     public class NetworkService: NetworkConnecter.NetworkConnecterBase
     {
+        private readonly ILogger<NetworkService> _logger;
+
+        public NetworkService(ILogger<NetworkService> logger)
+        {
+            _logger =   logger;
+        }
+
         private static string GetLocalIPv4(NetworkInterfaceType _type)
         {
             var output = string.Empty;
@@ -55,7 +62,7 @@ namespace ExternalDeviceWin.Services
             });
         }
 
-        public override Task<UsbipCallResp> InitUsbIp(UsbipCallReq request, ServerCallContext context)
+        public override Task<UsbipCallResp> InitUsbIp(UsbipDevice request, ServerCallContext context)
         {
             var client = new UsbipClient();
             var msg = client.InitUsbConnect(request.BusID, request.OriginIpAddress,context);

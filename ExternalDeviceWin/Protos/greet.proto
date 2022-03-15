@@ -12,26 +12,40 @@ service Greeter {
 
 service PrinterInfo{
 	// To check if the usb-ip is connected or the printer is drivered.
-	rpc GetAvailablePrinters(PrinterInfoRequest) returns (PrinterInfoResponse);
+	rpc GetAvailablePrinter(PrinterInfoRequest) returns (PrinterInfoResponse);
+	rpc GetPrintQueueInfo(PrintQueueReq) returns (PrintQueueRep);
 	rpc FileHandler(stream FileReq) returns (FileResp);
 }
 
 service NetworkConnecter {
 	rpc GetWinAdd(AddressReq) returns (AddressResp);
 	// init the usbip connect
-	rpc InitUsbIp(UsbipCallReq) returns (UsbipCallResp);
+	rpc InitUsbIp(UsbipDevice) returns (UsbipCallResp);
 }
 
 
 // Self-defined message
 message Error {
-	int32 code =1;
+	int32 code = 1;
 	string message = 2;
 }
 
 message Success {
 	int32 code = 1;
 	string message = 2;
+}
+
+message printQueueInfo {
+	string Name = 1;
+	string FullName = 2;
+	string IsAvailable = 3;
+	bool IsBusy = 4;
+	bool IsInError = 5;
+	bool IsOffLine = 6;
+	bool isOutOfPaper = 7;
+	bool isPaperJammed = 8;
+	bool IsPaused = 9;
+	string ErrMsg = 10;
 }
 
 // The request message containing the user's name.
@@ -44,16 +58,28 @@ message HelloReply {
   string message = 1;
 }
 
+
 message PrinterInfoRequest{
 	string originLinuxName = 1;
-	string originPrinterName = 2;
 }
 
 //The Reponse will 
 message PrinterInfoResponse {
-	string winName =1;
-	bool isPrinterExisted = 2;
-	repeated string availablePrinter = 3;
+	string winName = 1;
+	repeated string availablePrinter = 2;
+}
+
+message PrintQueueReq {
+	strng originLinuxName = 1;
+	// is an optional param
+	string printQueueName = 2;
+}
+
+message PrintQueueRep {
+	oneof result{
+		repeated printQueueInfo PrintQueueInfoList = 1;
+		printQueueInfo PrintQueueInfo = 2;
+	}
 }
 
 message FileReq{
@@ -82,7 +108,7 @@ message AddressResp {
 	}
 }
 
-message UsbipCallReq{
+message UsbipDevice {
 	string originLinuxName = 1;
 	string originIpAddress = 2;
 	string busID = 3;
@@ -94,4 +120,9 @@ message UsbipCallResp {
 		Error error = 1;
 		Success success = 2;
 	}
+}
+
+message UsbipCheckReq {
+	UsbipDevice usbipDevice  = 1;
+	string connectedDevicePort = 2;
 }

@@ -9,30 +9,18 @@ namespace ExternalDeviceWin.Services
     public class PrinterInfoService: PrinterInfo.PrinterInfoBase
     {
         private readonly ILogger<PrinterInfoService> _logger;
-        private readonly PrinterUtil _printerUtils;
-        public PrinterInfoService(ILogger<PrinterInfoService> logger, ILogger<PrinterUtil> logger2)
+        public PrinterInfoService(ILogger<PrinterInfoService> logger)
         {
             _logger = logger;
-            _printerUtils = new PrinterUtil(logger2);
         }
-        public override Task<PrinterInfoResponse> GetAvailablePrinters(PrinterInfoRequest request, ServerCallContext context)
-        {
-            _logger.LogInformation("{0} is sending a requset to get printerInfo", request.OriginLinuxName);
-            var targetPrinter = request.OriginPrinterName;
-            var printerList = _printerUtils.GetPrinterList();
-            var isPrinterExisted = false;
-            if (printerList.Contains(targetPrinter))
-            {
-                isPrinterExisted = true;
-            }
-            if (isPrinterExisted)
-            {
 
-            }
+        public override Task<PrinterInfoResponse> GetAvailablePrinter(PrinterInfoRequest request, ServerCallContext context)
+        {
+            _logger.LogInformation("{} is sending a requset to get printerInfo", request.OriginLinuxName);
+            var printerList = PrinterUtil.GetPrinterList();
             var resp = new PrinterInfoResponse();
-            resp.IsPrinterExisted = isPrinterExisted;
             resp.AvailablePrinter.AddRange(printerList);
-            resp.WinName = Environment.MachineName;
+            resp.WinName = Environment.UserName;
             return Task.FromResult(resp);
         }
 
@@ -44,18 +32,18 @@ namespace ExternalDeviceWin.Services
             {
                 var c = requestStream.Current;
                 _logger.LogInformation("{} send a file to print", c.OriginLinuxName);
-                using var ms = new MemoryStream(c.Files.ToByteArray());
+                await using var ms = new MemoryStream(c.Files.ToByteArray());
                 //TODO: print the file
             }
             return new FileResp
             {
                 Success = new Success
                 {
-                    Code = (int)HttpStatusCode.OK,
+                     Code = (int)HttpStatusCode.OK,
                     Message = "file upload is succeeded",
                 }
             };
-
         }
+        
     }
 }

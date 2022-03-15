@@ -30,9 +30,9 @@ namespace ExternalDeviceWin.Utils
             if (!checkExcuteFile())
             {
                 _logger.LogError("without usbip exe");
-                return msg;
+                return new Tuple<string,bool>(msg,false);
             }
-            var p = new Process();
+            using var p = new Process();
             var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
             //startInfo.UseShellExecute = false;          //不显示shell
             //startInfo.CreateNoWindow = true;            //不创建窗口
