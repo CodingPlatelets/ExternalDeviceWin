@@ -19,6 +19,7 @@ service PrinterInfo{
 }
 
 service NetworkConnecter {
+	//default type is 6 :Ethernet
 	rpc GetWinAdd(AddressReq) returns (AddressResp);
 	// init the usbip connect
 	rpc InitUsbIp(UsbipDevice) returns (UsbipCallResp);

@@ -37,10 +37,12 @@ namespace ExternalDeviceWin.Utils
                     return new Tuple<string, bool>(msg, false);
                 }
                 using var p = new Process();
+                //TODO need search first, or it will wait for at least 25s
                 var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
                 startInfo.UseShellExecute = false;              //不显示shell
                 startInfo.CreateNoWindow = true;                //不创建窗口
                 startInfo.RedirectStandardError = true;         //打开错误流
+                p.EnableRaisingEvents = true;
                 p.StartInfo = startInfo;
 
                 p.ErrorDataReceived += (sender, c) =>
@@ -55,7 +57,7 @@ namespace ExternalDeviceWin.Utils
                 p.BeginErrorReadLine();
                 //p.BeginOutputReadLine();
 
-                p.WaitForExit(1000);
+                p.WaitForExit(25000);
                 p.Close();
             }
             finally
