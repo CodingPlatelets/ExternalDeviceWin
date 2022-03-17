@@ -37,7 +37,7 @@ namespace ExternalDeviceWin.Utils
                     return new Tuple<string, bool>(msg, false);
                 }
                 using var p = new Process();
-                //TODO need search first, or it will wait for at least 25s
+                //TODO need search first() search still need 25s, or it will wait for at least 25s
                 var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
                 startInfo.UseShellExecute = false;              //不显示shell
                 startInfo.CreateNoWindow = true;                //不创建窗口
@@ -57,7 +57,7 @@ namespace ExternalDeviceWin.Utils
                 p.BeginErrorReadLine();
                 //p.BeginOutputReadLine();
 
-                p.WaitForExit(25000);
+                p.WaitForExit(10000);
                 p.Close();
             }
             finally
@@ -69,7 +69,61 @@ namespace ExternalDeviceWin.Utils
 
         private bool checkExcuteFile() => File.Exists("usbip.exe") && File.Exists("attacher.exe");
 
+        private bool checkDeviceExport(string busId, string serverIPAddress, ServerCallContext ctx)
+        {
+            var p = new Process();
+            var errMsg = new StringBuilder();
+            var outputMsg = new StringBuilder();
 
+            var startInfo = new ProcessStartInfo(executeFilePath, $"list -r {serverIPAddress}");
+            startInfo.RedirectStandardError=true;
+            startInfo.RedirectStandardOutput = true;
+            p.EnableRaisingEvents = true;
+            p.StartInfo = startInfo;
+            using var outputWaitHandler = new AutoResetEvent(false);
+            using var errorWaitHandler = new AutoResetEvent(false);
+
+            p.OutputDataReceived += (sender, c) =>
+            {
+                if(c.Data is null)
+                {
+                    outputWaitHandler.Set();
+                }
+                else
+                {
+                    outputMsg.AppendLine(c.Data);
+                }
+            };
+
+            p.ErrorDataReceived += (sender, c) =>
+            {
+                if (c.Data is null)
+                {
+                    errorWaitHandler.Set();
+                }
+                else
+                {
+                    errMsg.AppendLine(c.Data);
+                }
+            };
+
+            p.Start();
+
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+
+            if(p.WaitForExit(25000) && outputWaitHandler.WaitOne(1000) && errorWaitHandler.WaitOne(1000))
+            {
+                
+            }
+            else
+            {
+
+            }
+            _logger.LogDebug("output : {}", outputMsg.ToString());
+            _logger.LogDebug("error : {}", errMsg.ToString());
+            return false;
+        }
 
     }
 }
