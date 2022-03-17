@@ -145,11 +145,11 @@ namespace ExternalDeviceWin.Utils
             return statusReport.ToString();
         }
 
-        public static bool ExecutePdf(Stream ms, string printerName, string? Page = "1")
+        public static bool ExecutePdf(Stream ms, string printerName, string? Page)
         {
             if (string.IsNullOrEmpty(Page))
             {
-                Page = "1";
+                Page = "";
             }
 
             var path = FileUtils.saveFile(ms, null,FileTypes.PDF);
