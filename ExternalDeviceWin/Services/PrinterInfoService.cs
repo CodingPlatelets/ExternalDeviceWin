@@ -1,4 +1,5 @@
-﻿using ExternalDeviceWin.Utils;
+﻿using ExternalDeviceWin.Entites;
+using ExternalDeviceWin.Utils;
 using Grpc.Core;
 using System.Net;
 using System.Runtime.Versioning;
@@ -27,22 +28,42 @@ namespace ExternalDeviceWin.Services
 
         public override async Task<FileResp> FileHandler(IAsyncStreamReader<FileReq> requestStream, ServerCallContext context)
         {
-            var resp = new FileResp();
+            using var ms = new MemoryStream();
+            var printerName = string.Empty;
+            var pages = string.Empty;
             while (await requestStream.MoveNext())
             {
                 var c = requestStream.Current;
+                printerName = c.PrinterName;
+                pages = c.Pages;
                 _logger.LogInformation("{} send a file to print", c.OriginLinuxName);
-                await using var ms = new MemoryStream(c.Files.ToByteArray());
-                //TODO: print the file
+                using var temp = new MemoryStream(c.Files.ToArray());
+                await ms.CopyToAsync(temp).ConfigureAwait(false);
             }
-            return new FileResp
+
+            if (PrinterUtil.ExecutePdf(ms, printerName, pages))
             {
-                Success = new Success
+                return new FileResp
                 {
-                    Code = (int)HttpStatusCode.OK,
-                    Message = "file upload is succeeded",
-                }
-            };
+                    Success = new Success
+                    {
+                        Code = (int)HttpStatusCode.OK,
+                        Message = "file upload is succeeded",
+                    }
+                };
+            }
+            else
+            {
+                return new FileResp
+                {
+                    Error = new Error
+                    {
+                        Code = (int)HttpStatusCode.BadRequest,
+                        Message = "file upload wrong",
+                    }
+                };
+
+            }
         }
 
         public override Task<PrintQueueRep> GetPrintQueueInfo(PrintQueueReq request, ServerCallContext context)

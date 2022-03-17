@@ -91,7 +91,9 @@ message PrintQueueRep {
 
 message FileReq{
 	string originLinuxName = 1;
-	bytes files = 2;
+	string printerName = 2;
+	bytes files = 3;
+	string pages = 4;
 }
 
 message FileResp{

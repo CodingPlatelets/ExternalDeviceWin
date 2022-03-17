@@ -1,4 +1,5 @@
 ﻿using ExternalDeviceWin.Entites;
+using PDFtoPrinter;
 using System.Printing;
 using System.Runtime.Versioning;
 using System.Text;
@@ -144,10 +145,27 @@ namespace ExternalDeviceWin.Utils
             return statusReport.ToString();
         }
 
-        private static bool ExecutePdf(Stream ms, string printerName, bool isColored,
-            int fileCout, int beginPage = 0, int endPage = 0, string pageSize = "A4")
+        public static bool ExecutePdf(Stream ms, string printerName, string? Page = "1")
         {
-            return true;
+            if (string.IsNullOrEmpty(Page))
+            {
+                Page = "1";
+            }
+
+            var path = FileUtils.saveFile(ms, null,FileTypes.PDF);
+            if (!string.IsNullOrEmpty(path))
+            {
+                var wrapper = new PDFtoPrinterPrinter();
+                var op = new PrintingOptions(printerName,path);
+                op.Pages = Page;
+                wrapper.Print(op).Wait();
+                FileUtils.DeleteFile(path);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

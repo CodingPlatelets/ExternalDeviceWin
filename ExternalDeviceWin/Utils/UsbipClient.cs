@@ -57,7 +57,7 @@ namespace ExternalDeviceWin.Utils
                 p.BeginErrorReadLine();
                 //p.BeginOutputReadLine();
 
-                p.WaitForExit(10000);
+                p.WaitForExit(25000);
                 p.Close();
             }
             finally
