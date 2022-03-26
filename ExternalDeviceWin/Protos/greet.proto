@@ -25,6 +25,9 @@ service NetworkConnecter {
 	rpc InitUsbIp(UsbipDevice) returns (UsbipCallResp);
 }
 
+service AdminController {
+	rpc AdminRemoveDevice(AdminRemoveDeviceReq) returns (AdminRemoveDeviceRep);
+}
 
 // Self-defined message
 message Error {
@@ -134,4 +137,20 @@ message UsbipCallResp {
 message UsbipCheckReq {
 	UsbipDevice usbipDevice  = 1;
 	string connectedDevicePort = 2;
+}
+
+message AdminDevice {
+	string DeviceName = 1;
+	string DevicePort = 2;
+}
+
+message AdminRemoveDeviceReq {
+	AdminDevice adDevice = 1;
+}
+
+message AdminRemoveDeviceRep {
+	oneof result{
+		Success Success = 1;
+		Error Error = 2;
+	}
 }

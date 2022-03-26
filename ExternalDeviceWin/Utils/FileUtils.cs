@@ -60,6 +60,44 @@ namespace ExternalDeviceWin.Utils
             if (File.Exists(path)) { File.Delete(path); return true; }
             else { return false; }
         }
-        
+
+        public static FileTypes GetStreamExtension(Stream ms)
+        {
+            using var msStream = new MemoryStream();
+            ms.CopyTo(msStream);
+            msStream.Seek(0, SeekOrigin.Begin);
+            var bytes = msStream.ToArray();
+            msStream.Close();
+            if(bytes.Length < 1)
+            {
+                return FileTypes.Unknown;
+            }
+            string fileFlag = bytes[0].ToString() + bytes[1].ToString();
+
+            switch (fileFlag)
+            {
+                case " 255216 ":
+                    return FileTypes.JPG;
+
+                case " 4946 ":
+                case " 104116":
+                    return FileTypes.TXT;
+
+                case "3780":
+                    return FileTypes.PDF;
+
+                case " 7173 ":
+                    return FileTypes.GIF;
+
+                case " 6677 ":
+                    return FileTypes.BMP;
+
+                case " 13780 ":
+                    return FileTypes.PNG;
+                default:
+                    return FileTypes.Unknown;
+            }
+        }
+
     }
 }

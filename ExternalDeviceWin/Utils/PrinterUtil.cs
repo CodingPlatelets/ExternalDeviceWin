@@ -152,7 +152,7 @@ namespace ExternalDeviceWin.Utils
                 Page = "";
             }
 
-            var path = FileUtils.saveFile(ms, null,FileTypes.PDF);
+            var path = FileUtils.saveFile(ms, null,FileUtils.GetStreamExtension(ms));
             if (!string.IsNullOrEmpty(path))
             {
                 var wrapper = new PDFtoPrinterPrinter();

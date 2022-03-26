@@ -38,9 +38,20 @@ namespace ExternalDeviceWin.Services
                 pages = c.Pages;
                 _logger.LogInformation("{} send a file to print", c.OriginLinuxName);
                 using var temp = new MemoryStream(c.Files.ToArray());
-                await ms.CopyToAsync(temp).ConfigureAwait(false);
+                await temp.CopyToAsync(ms).ConfigureAwait(false);
             }
-
+            ms.Position = 0;
+            if (string.IsNullOrEmpty(printerName))
+            {
+                return new FileResp
+                {
+                    Error = new Error
+                    {
+                        Code = (int)HttpStatusCode.BadRequest,
+                        Message = "you must define printer name",
+                    }
+                };
+            }
             if (PrinterUtil.ExecutePdf(ms, printerName, pages))
             {
                 return new FileResp
