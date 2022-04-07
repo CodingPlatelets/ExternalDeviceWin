@@ -44,7 +44,7 @@ namespace ExternalDeviceWin.Utils
 
         }
 
-        public static IEnumerable<PrintQueueInfo> GetSlefPrintQueuesInfo()
+        public static IEnumerable<PrintQueueInfo> GetSelfPrintQueuesInfo()
         {
             var printerList = GetPrinterList().ToList<string>();
             using var myServer = new PrintServer();
@@ -67,7 +67,7 @@ namespace ExternalDeviceWin.Utils
 
         }
 
-        public static PrintQueueInfo? GetSlefPrintQueueInfo(string printQueueName)
+        public static PrintQueueInfo? GetSelfPrintQueueInfo(string printQueueName)
         {
 
             using var p = new PrintServer().GetPrintQueue(printQueueName) ?? throw new NullReferenceException();
@@ -156,7 +156,7 @@ namespace ExternalDeviceWin.Utils
             if (!string.IsNullOrEmpty(path))
             {
                 var wrapper = new PDFtoPrinterPrinter();
-                var op = new PrintingOptions(printerName,path);
+                var op = new PrintingOptions(printerName, path);
                 op.Pages = Page;
                 wrapper.Print(op).Wait();
                 FileUtils.DeleteFile(path);

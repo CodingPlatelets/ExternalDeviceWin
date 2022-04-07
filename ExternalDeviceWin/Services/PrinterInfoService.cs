@@ -82,7 +82,7 @@ namespace ExternalDeviceWin.Services
             var resp = new PrintQueueRep();
             if (string.IsNullOrEmpty(request.PrintQueueName))
             {
-                resp.PrintQueueInfoList.PrintQueueList.AddRange(from p in PrinterUtil.GetSlefPrintQueuesInfo()
+                resp.PrintQueueInfoList.PrintQueueList.AddRange(from p in PrinterUtil.GetSelfPrintQueuesInfo()
                                                                 select new printQueueInfo
                                                                 {
                                                                     Name = p.Name,
@@ -99,7 +99,7 @@ namespace ExternalDeviceWin.Services
             }
             else
             {
-                var p = PrinterUtil.GetSlefPrintQueueInfo(request.PrintQueueName);
+                var p = PrinterUtil.GetSelfPrintQueueInfo(request.PrintQueueName);
                 if(p is null)
                 {
                     resp.PrintQueueInfo = new printQueueInfo

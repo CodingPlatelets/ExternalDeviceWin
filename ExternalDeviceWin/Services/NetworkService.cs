@@ -8,13 +8,13 @@ using System.Text;
 
 namespace ExternalDeviceWin.Services
 {
-    public class NetworkService: NetworkConnecter.NetworkConnecterBase
+    public class NetworkService : NetworkConnecter.NetworkConnecterBase
     {
         private readonly ILogger<NetworkService> _logger;
 
         public NetworkService(ILogger<NetworkService> logger)
         {
-            _logger =   logger;
+            _logger = logger;
         }
 
         private static string GetLocalIPv4(NetworkInterfaceType _type)
@@ -33,6 +33,7 @@ namespace ExternalDeviceWin.Services
                     }
                 }
             }
+
             return output;
         }
 
@@ -45,7 +46,7 @@ namespace ExternalDeviceWin.Services
                     Ipv4Add = string.Empty,
                     Error = new Error
                     {
-                        Code = (int)HttpStatusCode.BadRequest,
+                        Code = (int) HttpStatusCode.BadRequest,
                         Message = "your network type is wrong",
                     }
                 });
@@ -53,10 +54,10 @@ namespace ExternalDeviceWin.Services
 
             return Task.FromResult(new AddressResp
             {
-                Ipv4Add = GetLocalIPv4((NetworkInterfaceType)request.NetworkType),
+                Ipv4Add = GetLocalIPv4((NetworkInterfaceType) request.NetworkType),
                 Success = new Success
                 {
-                    Code = (int)HttpStatusCode.OK,
+                    Code = (int) HttpStatusCode.OK,
                     Message = "OK",
                 }
             });
@@ -65,24 +66,27 @@ namespace ExternalDeviceWin.Services
         public override Task<UsbipCallResp> InitUsbIp(UsbipDevice request, ServerCallContext context)
         {
             var client = new UsbipClient();
-            var msg = client.InitUsbConnect(request.BusID, request.OriginIpAddress,context);
+            var msg = client.InitUsbConnect(request.BusID, request.OriginIpAddress, context);
+            //var msg = new Tuple<string, bool>("connect", true);
             var rep = new UsbipCallResp();
             if (msg.Item2)
             {
                 rep.Success = new Success
                 {
-                    Code = (int)HttpStatusCode.OK,
+                    Code = (int) HttpStatusCode.OK,
                     Message = msg.Item1,
                 };
+                DeviceUtil.LogDeviceCanUse(request.OriginLinuxName, request.OriginIpAddress, request.BusID);
             }
             else
             {
                 rep.Error = new Error
                 {
-                    Code = (int)HttpStatusCode.BadRequest,
+                    Code = (int) HttpStatusCode.BadRequest,
                     Message = msg.Item1,
                 };
             }
+
             return Task.FromResult<UsbipCallResp>(rep);
         }
     }

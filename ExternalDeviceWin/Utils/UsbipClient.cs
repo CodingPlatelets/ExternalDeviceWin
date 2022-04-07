@@ -34,7 +34,7 @@ namespace ExternalDeviceWin.Utils
                 if (!checkExcuteFile())
                 {
                     _logger.LogError("without usbip exe");
-                    return new Tuple<string, bool>(msg, false);
+                    return new Tuple<string, bool>("without usbip exe", false);
                 }
                 using var p = new Process();
                 //TODO need search first() search still need 25s, or it will wait for at least 25s
@@ -42,6 +42,50 @@ namespace ExternalDeviceWin.Utils
                 startInfo.UseShellExecute = false;              //不显示shell
                 startInfo.CreateNoWindow = true;                //不创建窗口
                 startInfo.RedirectStandardError = true;         //打开错误流
+                p.EnableRaisingEvents = true;
+                p.StartInfo = startInfo;
+
+                p.ErrorDataReceived += (sender, c) =>
+                {
+                    Console.WriteLine("error");
+                    Console.WriteLine(c.Data);
+                    errMsg.Append(c.Data);
+                };
+
+                p.Start();
+
+                p.BeginErrorReadLine();
+                //p.BeginOutputReadLine();
+
+                p.WaitForExit(25000);
+                p.Close();
+            }
+            finally
+            {
+                Directory.SetCurrentDirectory("..");
+            }
+            return string.IsNullOrEmpty(errMsg.ToString()) ? new Tuple<string,bool>(msg,true) : new Tuple<string,bool>(errMsg.ToString(),false);
+        }
+
+        public Tuple<string, bool> CheckUsbConnect(string busId, string serverIpAddress, ServerCallContext ctx)
+        {
+            var msg = $"{busId} is Connected";
+            var errMsg = new StringBuilder();
+            try
+            {
+                Directory.SetCurrentDirectory(workingDir);
+                if (!checkExcuteFile())
+                {
+                    _logger.LogError("without usbip exe");
+                    return new Tuple<string, bool>("without usbip exe", false);
+                }
+                using var p = new Process();
+                var startInfo = new ProcessStartInfo(executeFilePath, $"list -r {serverIpAddress} -b {busId}")
+                    {
+                        UseShellExecute = false, //不显示shell
+                        CreateNoWindow = true, //不创建窗口
+                        RedirectStandardError = true //打开错误流
+                    };
                 p.EnableRaisingEvents = true;
                 p.StartInfo = startInfo;
 
