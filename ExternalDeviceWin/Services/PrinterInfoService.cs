@@ -59,7 +59,7 @@ namespace ExternalDeviceWin.Services
                     Success = new Success
                     {
                         Code = (int)HttpStatusCode.OK,
-                        Message = "file upload is succeeded",
+                        Message = "file upload success",
                     }
                 };
             }
@@ -95,7 +95,7 @@ namespace ExternalDeviceWin.Services
                                                                     IsPaperJammed = p.IsPaperJammed,
                                                                     IsPaused = p.IsPaused,
                                                                     ErrMsg = p.ErrMsg,
-                                                                });
+                                                                } ?? new printQueueInfo());
             }
             else
             {
@@ -104,15 +104,7 @@ namespace ExternalDeviceWin.Services
                 {
                     resp.PrintQueueInfo = new printQueueInfo
                     {
-                        Name = default(string),
-                        FullName = default(string),
-                        IsAvailable = default(bool),
-                        IsBusy = default(bool),
-                        IsInError = default(bool),
-                        IsOffLine = default(bool),
-                        IsOutOfPaper = default(bool),
-                        IsPaperJammed = default(bool),
-                        IsPaused = default(bool),
+                        Name = "NO_SUCH_PRINTER",
                     };
                 }
                 else

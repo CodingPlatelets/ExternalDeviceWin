@@ -42,6 +42,22 @@ namespace ExternalDeviceWin.Utils
                 select p.Name;
         }
 
+        public static bool CheckPrinterList(string printerName)
+        {
+            _logger.LogDebug(Thread.CurrentThread.ToString());
+            using var myServer = new PrintServer();
+            var name = (from p in myServer.GetPrintQueues()
+                       where !string.IsNullOrWhiteSpace(p.Name)
+                       where !p.Name.Contains("OneNote (Desktop)")
+                       where !p.Name.Contains("Microsoft Print to PDF")
+                       where !p.Name.Contains("Fax")
+                       where !p.Name.Contains("Adobe PDF")
+                       where !p.Name.Contains("Microsoft XPS Document Writer")
+                       where p.Name == printerName
+                       select p.Name).FirstOrDefault<string>();
+            return string.IsNullOrEmpty(name);
+        }
+
         public static IEnumerable<PrintQueueInfo> GetSelfPrintQueuesInfo()
         {
             var printerList = GetPrinterList().ToList<string>();
@@ -66,8 +82,11 @@ namespace ExternalDeviceWin.Utils
 
         public static PrintQueueInfo? GetSelfPrintQueueInfo(string printQueueName)
         {
+            if (CheckPrinterList(printQueueName))
+            {
+                return null;
+            }
             using var p = new PrintServer().GetPrintQueue(printQueueName) ?? throw new NullReferenceException();
-
             return new PrintQueueInfo
             {
                 Name = p.Name,
