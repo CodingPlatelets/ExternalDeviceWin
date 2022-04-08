@@ -2,12 +2,13 @@
 {
     internal static class LogUtils
     {
-        private static ILoggerFactory LoggerFactory { get; }
+        private static ILoggerFactory _loggerFactory { get; }
         static LogUtils()
         {
-            LoggerFactory = new LoggerFactory();
+            _loggerFactory = LoggerFactory.Create(b => b.AddConsole());
         }
-        internal static ILogger CreateLogger<T>() => LoggerFactory.CreateLogger<T>();
-        internal static ILogger CreateLogger(string name) => LoggerFactory.CreateLogger(name);
+
+        internal static ILogger<T> CreateLogger<T>() => _loggerFactory.CreateLogger<T>();
+        internal static ILogger CreateLogger(string name) => _loggerFactory.CreateLogger(name);
     }
 }

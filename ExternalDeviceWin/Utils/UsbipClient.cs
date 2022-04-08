@@ -16,7 +16,7 @@ namespace ExternalDeviceWin.Utils
             this._semaphore = maxConcurrentPrintings > 0
                 ? new SemaphoreSlim(maxConcurrentPrintings)
                 : throw new ArgumentException("conflict in use usbip", nameof(maxConcurrentPrintings));
-            _logger = new LoggerFactory().CreateLogger<UsbipClient>();
+            _logger = LogUtils.CreateLogger<UsbipClient>();
             ExecuteFilePath = executePath;
             WorkingDir = Directory.GetCurrentDirectory() + @"\ExternalDepends";
         }
@@ -29,7 +29,7 @@ namespace ExternalDeviceWin.Utils
             try
             {
                 Directory.SetCurrentDirectory(WorkingDir);
-                if (!checkExcuteFile())
+                if (!checkExecuteFile())
                 {
                     _logger.LogError("without usbip exe");
                     return new Tuple<string, bool>("without usbip exe", false);
@@ -78,7 +78,7 @@ namespace ExternalDeviceWin.Utils
             try
             {
                 Directory.SetCurrentDirectory(WorkingDir);
-                if (!checkExcuteFile())
+                if (!checkExecuteFile())
                 {
                     _logger.LogError("without usbip exe");
                     return new Tuple<string, bool>("without usbip exe", false);
@@ -120,7 +120,7 @@ namespace ExternalDeviceWin.Utils
                 : new Tuple<string, bool>(errMsg.ToString(), false);
         }
 
-        private bool checkExcuteFile() => File.Exists("usbip.exe") && File.Exists("attacher.exe");
+        private bool checkExecuteFile() => File.Exists("usbip.exe") && File.Exists("attacher.exe");
 
         private bool checkDeviceExport(string busId, string serverIPAddress, ServerCallContext ctx)
         {
