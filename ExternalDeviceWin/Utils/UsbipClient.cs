@@ -7,41 +7,40 @@ namespace ExternalDeviceWin.Utils
     public class UsbipClient
     {
         private readonly ILogger<UsbipClient> _logger;
-        private string executeFilePath
+        private readonly SemaphoreSlim _semaphore;
+        private string ExecuteFilePath { get; init; }
+        private string WorkingDir { get; init; }
+
+        public UsbipClient(string executePath = "usbip", int maxConcurrentPrintings = 1)
         {
-            get;
-            init;
-        }
-        private string workingDir
-        {
-            get;
-            init;
-        }
-        public UsbipClient (string executePath = "usbip")
-        {
+            this._semaphore = maxConcurrentPrintings > 0
+                ? new SemaphoreSlim(maxConcurrentPrintings)
+                : throw new ArgumentException("conflict in use usbip", nameof(maxConcurrentPrintings));
             _logger = new LoggerFactory().CreateLogger<UsbipClient>();
-            executeFilePath = executePath;
-            workingDir = Directory.GetCurrentDirectory() + @"\ExternalDepends";
+            ExecuteFilePath = executePath;
+            WorkingDir = Directory.GetCurrentDirectory() + @"\ExternalDepends";
         }
 
-        public Tuple<string,bool> InitUsbConnect(string busId, string serverIPAddress, ServerCallContext ctx)
+        public Tuple<string, bool> InitUsbConnect(string busId, string serverIPAddress, ServerCallContext ctx)
         {
+            this._semaphore.Wait();
             var msg = $"{busId} is Connected";
             var errMsg = new StringBuilder();
             try
             {
-                Directory.SetCurrentDirectory(workingDir);
+                Directory.SetCurrentDirectory(WorkingDir);
                 if (!checkExcuteFile())
                 {
                     _logger.LogError("without usbip exe");
                     return new Tuple<string, bool>("without usbip exe", false);
                 }
+
                 using var p = new Process();
                 //TODO need search first() search still need 25s, or it will wait for at least 25s
-                var startInfo = new ProcessStartInfo(executeFilePath, $"attach -r {serverIPAddress} -b {busId}");
-                startInfo.UseShellExecute = false;              //不显示shell
-                startInfo.CreateNoWindow = true;                //不创建窗口
-                startInfo.RedirectStandardError = true;         //打开错误流
+                var startInfo = new ProcessStartInfo(ExecuteFilePath, $"attach -r {serverIPAddress} -b {busId}");
+                startInfo.UseShellExecute = false; //不显示shell
+                startInfo.CreateNoWindow = true; //不创建窗口
+                startInfo.RedirectStandardError = true; //打开错误流
                 p.EnableRaisingEvents = true;
                 p.StartInfo = startInfo;
 
@@ -63,29 +62,35 @@ namespace ExternalDeviceWin.Utils
             finally
             {
                 Directory.SetCurrentDirectory("..");
+                this._semaphore.Release();
             }
-            return string.IsNullOrEmpty(errMsg.ToString()) ? new Tuple<string,bool>(msg,true) : new Tuple<string,bool>(errMsg.ToString(),false);
+
+            return string.IsNullOrEmpty(errMsg.ToString())
+                ? new Tuple<string, bool>(msg, true)
+                : new Tuple<string, bool>(errMsg.ToString(), false);
         }
 
         public Tuple<string, bool> CheckUsbConnect(string busId, string serverIpAddress, ServerCallContext ctx)
         {
+            this._semaphore.Wait();
             var msg = $"{busId} is Connected";
             var errMsg = new StringBuilder();
             try
             {
-                Directory.SetCurrentDirectory(workingDir);
+                Directory.SetCurrentDirectory(WorkingDir);
                 if (!checkExcuteFile())
                 {
                     _logger.LogError("without usbip exe");
                     return new Tuple<string, bool>("without usbip exe", false);
                 }
+
                 using var p = new Process();
-                var startInfo = new ProcessStartInfo(executeFilePath, $"list -r {serverIpAddress} -b {busId}")
-                    {
-                        UseShellExecute = false, //不显示shell
-                        CreateNoWindow = true, //不创建窗口
-                        RedirectStandardError = true //打开错误流
-                    };
+                var startInfo = new ProcessStartInfo(ExecuteFilePath, $"list -r {serverIpAddress} -b {busId}")
+                {
+                    UseShellExecute = false, //不显示shell
+                    CreateNoWindow = true, //不创建窗口
+                    RedirectStandardError = true //打开错误流
+                };
                 p.EnableRaisingEvents = true;
                 p.StartInfo = startInfo;
 
@@ -107,8 +112,12 @@ namespace ExternalDeviceWin.Utils
             finally
             {
                 Directory.SetCurrentDirectory("..");
+                this._semaphore.Release();
             }
-            return string.IsNullOrEmpty(errMsg.ToString()) ? new Tuple<string,bool>(msg,true) : new Tuple<string,bool>(errMsg.ToString(),false);
+
+            return string.IsNullOrEmpty(errMsg.ToString())
+                ? new Tuple<string, bool>(msg, true)
+                : new Tuple<string, bool>(errMsg.ToString(), false);
         }
 
         private bool checkExcuteFile() => File.Exists("usbip.exe") && File.Exists("attacher.exe");
@@ -119,8 +128,8 @@ namespace ExternalDeviceWin.Utils
             var errMsg = new StringBuilder();
             var outputMsg = new StringBuilder();
 
-            var startInfo = new ProcessStartInfo(executeFilePath, $"list -r {serverIPAddress}");
-            startInfo.RedirectStandardError=true;
+            var startInfo = new ProcessStartInfo(ExecuteFilePath, $"list -r {serverIPAddress}");
+            startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
             p.EnableRaisingEvents = true;
             p.StartInfo = startInfo;
@@ -129,7 +138,7 @@ namespace ExternalDeviceWin.Utils
 
             p.OutputDataReceived += (sender, c) =>
             {
-                if(c.Data is null)
+                if (c.Data is null)
                 {
                     outputWaitHandler.Set();
                 }
@@ -156,18 +165,16 @@ namespace ExternalDeviceWin.Utils
             p.BeginOutputReadLine();
             p.BeginErrorReadLine();
 
-            if(p.WaitForExit(25000) && outputWaitHandler.WaitOne(1000) && errorWaitHandler.WaitOne(1000))
+            if (p.WaitForExit(25000) && outputWaitHandler.WaitOne(1000) && errorWaitHandler.WaitOne(1000))
             {
-                
             }
             else
             {
-
             }
+
             _logger.LogDebug("output : {}", outputMsg.ToString());
             _logger.LogDebug("error : {}", errMsg.ToString());
             return false;
         }
-
     }
 }
